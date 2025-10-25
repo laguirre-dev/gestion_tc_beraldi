@@ -1,0 +1,6 @@
+[theme]
+primaryColor = "#FF6A13"             # Naranja corporativo (botones, sliders, selects)
+backgroundColor = "#1E1E1E"          # Fondo oscuro principal
+secondaryBackgroundColor = "#2C2C2C" # Fondos de contenedores secundarios
+textColor = "#FFFFFF"                 # Texto principal blanco
+font = "sans serif"                   # Fuente moderna y legible
