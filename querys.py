@@ -34,6 +34,6 @@ puntaje, estado, empresa_chofer, legajo_chofer, pregunta_13_principios, 13_princ
 FROM public.tc_axion_carga
 
   ) AS T
-WHERE fecha_transaccion between :desde and :hasta
-ORDER BY fecha_transaccion desc
+WHERE fecha_realizacion between :desde and :hasta
+ORDER BY fecha_realizacion desc
 """
