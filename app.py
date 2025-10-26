@@ -1,6 +1,5 @@
 # modulo principal de la aplicacion
 import streamlit as st
-# from conexiones import run_query
 from querys import get_all_tc
 import pandas as pd
 import datetime
