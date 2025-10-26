@@ -2,32 +2,34 @@
 
 import streamlit as st
 import pandas as pd
-import pg8000
+from sqlalchemy import create_engine, text
 
 
 @st.cache_resource
-def init_connections():
-    return pg8000.connect(**st.secrets["connections"]["postgresql"])
-
-
-conn = init_connections()
+def init_connection():
+    connection_string = (
+        f"postgresql+pg8000://{st.secrets['connections']['postgresql']['user']}:"
+        f"{st.secrets['connections']['postgresql']['password']}@"
+        f"{st.secrets['connections']['postgresql']['host']}:"
+        f"{st.secrets['connections']['postgresql']['port']}/"
+        f"{st.secrets['connections']['postgresql']['database']}"
+    )
+    return create_engine(connection_string)
 
 
 @st.cache_data(ttl=600)
 def run_query(sql_query, params=None):
     try:
-        with conn.cursor() as cur:
-            if params:
-                cur.execute(sql_query, params)
+        engine = init_connection()
+        with engine.connect() as connection:
+            result = connection.execute(text(sql_query), params or {})
+            # Si la consulta devuelve datos (SELECT)
+            if result.returns_rows:
+                df = pd.DataFrame(result.fetchall(), columns=result.keys())
+                return df
             else:
-                cur.execute(sql_query)
-
-            # Si es un SELECT, obtiene datos.
-            data = cur.fetchall()
-            column_names = [desc[0] for desc in cur.description]
-            return pd.DataFrame(data, columns=column_names)
+                connection.commit()
+                return None
     except Exception as e:
-        # Maneja cualquier otro error SQL
         st.error(f"Error al ejecutar la consulta: {e}")
-        conn.rollback()
         st.stop()

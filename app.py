@@ -72,7 +72,7 @@ with st.sidebar:
         value=(hace_un_mes, hoy),
     )
     if st.button("Actualizar", key="a|ctualizar", type="primary"):
-        df = run_query(get_all_tc(), fechas)
+        df = run_query(get_all_tc(), {"desde" : fechas[0], "hasta" : fechas[1]})
         st.session_state.df = df
     if not df.empty:
         if st.toggle("Filtrar por columna"):
@@ -182,18 +182,6 @@ if not df.empty:
     col2.bar_chart(count_tipo, color="#ff5500")
 
     # porcentaje de tendencias segun tipo de tc
-    ## creamos el Dataframe modelo
-    tendencias = pd.DataFrame(
-        {
-            "pregunta": [
-                "Contador Total",
-                'Contador "Cumple"',
-                'Contador "No Cumple"',
-                'Contador "No Aplica"',
-                "% No Cumple",
-            ]
-        }
-    )
 
     ## Separamos los DataFrames
     df_carga = df_actual[df_actual["tipo"] == "CARGA"]
@@ -206,11 +194,13 @@ if not df.empty:
     tf_descarga = crea_tendencias(df_descarga)
     tf_ipv = crea_tendencias(df_ipv)
     tf_manejo = crea_tendencias(df_manejo)
+
     ##  hacemos dinamica de todas
     tf_carga_melteado = crea_resumen_tendencias(tf_carga)
     tf_descarga_melteado = crea_resumen_tendencias(tf_descarga)
     tf_ipv_melteado = crea_resumen_tendencias(tf_ipv)
     tf_manejo_melteado = crea_resumen_tendencias(tf_manejo)
+
     ## Mostramos la info
     st.subheader("Tendencias 🔥", divider="orange")
     st.title("__CARGA__")
