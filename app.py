@@ -1,6 +1,6 @@
 # modulo principal de la aplicacion
 import streamlit as st
-from conexiones import run_query
+# from conexiones import run_query
 from querys import get_all_tc
 import pandas as pd
 import datetime
@@ -17,6 +17,7 @@ st.set_page_config(
     initial_sidebar_state="expanded",
 )
 
+conn = st.connection("postgresql", type="sql")
 
 def crea_tendencias(dataframe):
     t = pd.DataFrame(
@@ -72,7 +73,11 @@ with st.sidebar:
         value=(hace_un_mes, hoy),
     )
     if st.button("Actualizar", key="a|ctualizar", type="primary"):
-        df = run_query(get_all_tc(), {"desde" : fechas[0], "hasta" : fechas[1]})
+        df = conn.query(
+            get_all_tc(), 
+            params={"desde" : fechas[0], "hasta" : fechas[1]},
+            ttl=600
+            )
         st.session_state.df = df
     if not df.empty:
         if st.toggle("Filtrar por columna"):
