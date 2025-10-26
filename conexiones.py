@@ -1,20 +1,43 @@
 # modulo de conexion a la base de datos
 
 import streamlit as st
-from sqlalchemy import create_engine, Connection
+import pandas as pd
+import psycopg2
+from psycopg2 import errors
 
 
-def connect_bd() -> tuple[Connection, Connection.cursor]:
+@st.cache_resource
+def init_connections():
+    return psycopg2.connect(**st.secrets["connections"]["postgresql"])
+
+
+conn = init_connections()
+
+
+@st.cache_data(ttl=600)
+def run_query(sql_query, params=None):
     try:
-        server = st.secrets["BERALDI_API_DB_HOST"]
-        database = st.secrets["BERALDI_API_DB_NAME"]
-        user = st.secrets["BERALDI_API_DB_USER"]
-        password = st.secrets["BERALDI_API_DB_PASSWORD"]
-        port = st.secrets["BERALDI_API_DB_PORT"]
-        conn = create_engine(
-            f"postgresql://{user}:{password}@{server}:{port}/{database}"
-        )
-        return conn, conn.cursor()
+        with conn.cursor() as cur:
+            if params:
+                cur.execute(sql_query, params)
+            else:
+                cur.execute(sql_query)
+
+            # Si es un SELECT, obtiene datos.
+            data = cur.fetchall()
+            column_names = [desc[0] for desc in cur.description]
+            return pd.DataFrame(data, columns=column_names)
+
+    except errors.InFailedSqlTransaction as e:
+        # Limpia el estado abortado de la transacción.
+        conn.rollback()
+
+        # 2. Re-lanzar el error o mostrar un mensaje claro al usuario
+        st.error(f"Error de Transacción Abortada. Intentando de nuevo...")
+        st.stop()  # Detiene la ejecución para evitar más errores en cascada
+
     except Exception as e:
-        st.toast(f"Error al conectar a la base de datos: {e}", icon="🚨")
-        return None
+        # Maneja cualquier otro error SQL
+        st.error(f"Error al ejecutar la consulta: {e}")
+        conn.rollback()
+        st.stop()
