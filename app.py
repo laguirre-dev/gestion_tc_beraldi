@@ -224,6 +224,7 @@ if not df.empty:
     col2.dataframe(tf_carga.set_index("pregunta"))
     st.title("__DESCARGA__")
     col1, col2 = st.columns(2)
+    # ])
     col1.bar_chart(
         filtra_tendencia(tf_descarga_melteado),
         x="id_pregunta",
